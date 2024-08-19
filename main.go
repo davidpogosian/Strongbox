@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"log"
+
 	/*"fmt"*/
 	"net/http"
 	"time"
 
 	"strongbox/platform/authenticator"
+	"strongbox/platform/database"
 	"strongbox/platform/router"
 
 	"github.com/joho/godotenv"
@@ -86,6 +88,10 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Failed to load the env vars: %v", err)
 	}
+
+	db := database.InitializeDatabaseConnection("strongbox.db")
+	defer database.TeardownDatabaseConnection(db)
+	database.CreateAssetTable(db)
 
 	auth, err := authenticator.New()
 	if err != nil {
