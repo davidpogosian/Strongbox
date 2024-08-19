@@ -1,0 +1,16 @@
+#drop_zone {
+    width: 200px;
+    height: 140px;
+    border: 2px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+}
+
+#drop_zone.dragover {
+    border-color: #000;
+    color: #000;
+}

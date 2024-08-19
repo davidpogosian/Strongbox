@@ -1,10 +1,11 @@
 package database
 
 import (
-	"os"
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -12,6 +13,7 @@ import (
 type Asset struct {
 	UserId string
 	S3Key string
+	LastAccessed time.Time
 }
 
 func InitializeDatabaseConnection(name string) *sql.DB {
@@ -32,7 +34,8 @@ func CreateAssetTable(db *sql.DB) {
 	statement := `
 	CREATE TABLE IF NOT EXISTS assets (
 		userId TEXT NOT NULL,
-		s3Key TEXT NOT NULL
+		s3Key TEXT NOT NULL,
+		lastAccessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
 	`
 	_, err := db.Exec(statement)
@@ -41,7 +44,7 @@ func CreateAssetTable(db *sql.DB) {
 	}
 }
 
-func AddWord(db *sql.DB, asset *Asset) {
+func AddAsset(db *sql.DB, asset *Asset) {
 	statement, err := db.Prepare("INSERT INTO assets (userId, s3Key) VALUES (?, ?)")
 	if err != nil {
 		log.Fatal(err)
@@ -51,6 +54,31 @@ func AddWord(db *sql.DB, asset *Asset) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func FindAllAssetsByUserId(db *sql.DB, userId string) ([]Asset, error) {
+	query := "SELECT userId, s3Key, lastAccessed FROM assets WHERE userId = ?"
+    rows, err := db.Query(query, userId)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var assets []Asset
+    for rows.Next() {
+        var asset Asset
+        err := rows.Scan(&asset.UserId, &asset.S3Key, &asset.LastAccessed)
+        if err != nil {
+            return nil, err
+        }
+        assets = append(assets, asset)
+    }
+
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return assets, nil
 }
 
 func DeleteDatabase(name string) {

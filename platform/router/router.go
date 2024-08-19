@@ -1,6 +1,7 @@
 package router
 
 import (
+	"database/sql"
 	"encoding/gob"
 	"encoding/hex"
 	"log"
@@ -17,10 +18,11 @@ import (
 	"strongbox/web/app/login"
 	"strongbox/web/app/logout"
 	"strongbox/web/app/myfiles"
+	"strongbox/web/api/upload"
 )
 
 // New registers the routes and returns the router.
-func New(auth *authenticator.Authenticator) *gin.Engine {
+func New(db *sql.DB, auth *authenticator.Authenticator) *gin.Engine {
 	router := gin.Default()
 
 	// To store custom types in our cookies,
@@ -40,8 +42,13 @@ func New(auth *authenticator.Authenticator) *gin.Engine {
 	router.GET("/", home.Handler)
 	router.GET("/login", login.Handler(auth))
 	router.GET("/callback", callback.Handler(auth))
-	router.GET("/myfiles", middleware.IsAuthenticated, myfiles.Handler)
+	router.GET("/myfiles", middleware.IsAuthenticated, myfiles.Handler(db))
 	router.GET("/logout", logout.Handler)
+
+	api := router.Group("/api")
+	{
+		api.POST("/upload", middleware.MustBeAuthenticated, upload.Handler())
+	}
 
 	return router
 }

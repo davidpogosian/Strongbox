@@ -89,6 +89,7 @@ func main() {
 		log.Fatalf("Failed to load the env vars: %v", err)
 	}
 
+	database.DeleteDatabase("strongbox.db")
 	db := database.InitializeDatabaseConnection("strongbox.db")
 	defer database.TeardownDatabaseConnection(db)
 	database.CreateAssetTable(db)
@@ -98,7 +99,7 @@ func main() {
 		log.Fatalf("Failed to initialize the authenticator: %v", err)
 	}
 
-	rtr := router.New(auth)
+	rtr := router.New(db, auth)
 
 	log.Print("Server listening on http://localhost:3000/")
 	if err := http.ListenAndServe("0.0.0.0:3000", rtr); err != nil {
