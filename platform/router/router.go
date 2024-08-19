@@ -7,22 +7,23 @@ import (
 	"log"
 	"os"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 
 	"strongbox/platform/authenticator"
 	"strongbox/platform/middleware"
+	"strongbox/web/api/upload"
 	"strongbox/web/app/callback"
 	"strongbox/web/app/home"
 	"strongbox/web/app/login"
 	"strongbox/web/app/logout"
 	"strongbox/web/app/myfiles"
-	"strongbox/web/api/upload"
 )
 
 // New registers the routes and returns the router.
-func New(db *sql.DB, auth *authenticator.Authenticator) *gin.Engine {
+func New(db *sql.DB, auth *authenticator.Authenticator, s3Client *s3.Client) *gin.Engine {
 	router := gin.Default()
 
 	// To store custom types in our cookies,
@@ -47,7 +48,7 @@ func New(db *sql.DB, auth *authenticator.Authenticator) *gin.Engine {
 
 	api := router.Group("/api")
 	{
-		api.POST("/upload", middleware.MustBeAuthenticated, upload.Handler())
+		api.POST("/upload", middleware.MustBeAuthenticated, upload.Handler(db, s3Client))
 	}
 
 	return router

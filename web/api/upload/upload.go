@@ -1,19 +1,24 @@
 package upload
 
 import (
+	"database/sql"
 	"fmt"
+	"io"
 	"net/http"
+	"strongbox/platform/database"
+	"strongbox/platform/storage"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
 // Handler handles the file upload
-func Handler() gin.HandlerFunc {
+func Handler(db *sql.DB, s3Client *s3.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		session := sessions.Default(ctx)
-		profile := session.Get("profile")
-		fmt.Println(profile)
+		profile := session.Get("profile").(map[string]interface{})
+		userId := profile["sub"].(string)
 
 		// Get the file from the request
 		file, fileHeader, err := ctx.Request.FormFile("file")
@@ -25,6 +30,31 @@ func Handler() gin.HandlerFunc {
 
 		// Print the file details
 		fmt.Println("Received file:", fileHeader.Filename)
+
+		// Read the file into a byte slice
+		fileBytes, err := io.ReadAll(file)
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, "Unable to read file: %s", err.Error())
+			return
+		}
+
+		// Atomic: Put file in S3, check if already in S3, ask to overwrite, put file in db
+		key := userId + "/" + fileHeader.Filename
+		err = storage.UploadFile(s3Client, key, fileBytes)
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, "Unable to upload file: %s", err.Error())
+			return
+		}
+
+		err = database.AddAsset(db, &database.Asset{
+			UserId: userId,
+			S3Key: key,
+		})
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, "Unable to put file in database: %s", err.Error())
+			// TODO Delete asset from S3
+			return
+		}
 
 		// Respond to the client
 		ctx.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})

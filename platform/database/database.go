@@ -44,16 +44,17 @@ func CreateAssetTable(db *sql.DB) {
 	}
 }
 
-func AddAsset(db *sql.DB, asset *Asset) {
+func AddAsset(db *sql.DB, asset *Asset) error {
 	statement, err := db.Prepare("INSERT INTO assets (userId, s3Key) VALUES (?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer statement.Close()
 	_, err = statement.Exec(asset.UserId, asset.S3Key)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
 func FindAllAssetsByUserId(db *sql.DB, userId string) ([]Asset, error) {
