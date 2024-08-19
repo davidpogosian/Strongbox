@@ -53,6 +53,10 @@ func Handler(db *sql.DB, s3Client *s3.Client) gin.HandlerFunc {
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, "Unable to put file in database: %s", err.Error())
 			// TODO Delete asset from S3
+			err = storage.DeleteFile(s3Client, key)
+			if err != nil {
+				// log something somewhere so when S3 comes back online we can delete
+			}
 			return
 		}
 

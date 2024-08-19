@@ -2,13 +2,19 @@ package myfiles
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
+	"strings"
 	"strongbox/platform/database"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
+
+type VerboseAsset struct {
+	Name string
+	/* download link? */
+	/* size? */
+}
 
 func Handler(db *sql.DB) gin.HandlerFunc {
 	return func (ctx *gin.Context) {
@@ -21,8 +27,19 @@ func Handler(db *sql.DB) gin.HandlerFunc {
 			ctx.String(http.StatusInternalServerError, err.Error())
 			return
 		}
-		fmt.Println(assets)
 
-		ctx.HTML(http.StatusOK, "myfiles.html", profile)
+		var verboseAssets []VerboseAsset
+		for _, asset := range assets {
+			parts := strings.Split(asset.S3Key, "/")
+			name := parts[len(parts) - 1]
+			verboseAssets = append(verboseAssets, VerboseAsset{Name: name,})
+		}
+
+		data := gin.H{
+			"profile": profile,
+			"verboseAssets": verboseAssets,
+		}
+
+		ctx.HTML(http.StatusOK, "myfiles.html", data)
 	}
 }

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"io"
 	"bytes"
 	"context"
 	"log"
@@ -43,4 +44,45 @@ func UploadFile(client *s3.Client, key string, fileBytes []byte) error {
 	}
 
 	return nil
+}
+
+// DeleteFile deletes a file from the S3 bucket
+func DeleteFile(client *s3.Client, key string) error {
+	// Prepare the file deletion input
+	input := &s3.DeleteObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
+
+	// Delete the file from S3
+	_, err := client.DeleteObject(context.TODO(), input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetFile retrieves a file from the S3 bucket
+func GetFile(client *s3.Client, key string) ([]byte, error) {
+	// Prepare the file retrieval input
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
+
+	// Retrieve the file from S3
+	resp, err := client.GetObject(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Read the file content into a byte slice
+	fileBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileBytes, nil
 }
