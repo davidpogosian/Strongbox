@@ -1,4 +1,4 @@
-package user
+package myfiles
 
 import (
 	"net/http"
@@ -7,10 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Handler for our logged-in user page.
 func Handler(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	profile := session.Get("profile")
 
-	ctx.HTML(http.StatusOK, "user.html", profile)
+	ctx.HTML(http.StatusOK, "myfiles.html", profile)
 }

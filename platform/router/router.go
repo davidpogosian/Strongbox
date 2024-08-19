@@ -16,7 +16,7 @@ import (
 	"strongbox/web/app/home"
 	"strongbox/web/app/login"
 	"strongbox/web/app/logout"
-	"strongbox/web/app/user"
+	"strongbox/web/app/myfiles"
 )
 
 // New registers the routes and returns the router.
@@ -40,7 +40,7 @@ func New(auth *authenticator.Authenticator) *gin.Engine {
 	router.GET("/", home.Handler)
 	router.GET("/login", login.Handler(auth))
 	router.GET("/callback", callback.Handler(auth))
-	router.GET("/user", middleware.IsAuthenticated, user.Handler)
+	router.GET("/myfiles", middleware.IsAuthenticated, myfiles.Handler)
 	router.GET("/logout", logout.Handler)
 
 	return router
