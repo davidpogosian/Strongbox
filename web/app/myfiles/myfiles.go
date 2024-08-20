@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODO need S3 key in this struct
 type VerboseAsset struct {
 	Name string
 	/* download link? */

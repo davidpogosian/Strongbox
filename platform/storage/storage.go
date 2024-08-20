@@ -4,11 +4,13 @@ import (
 	"io"
 	"bytes"
 	"context"
+	"errors"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	smithy "github.com/aws/smithy-go"
 )
 
 const (
@@ -85,4 +87,24 @@ func GetFile(client *s3.Client, key string) ([]byte, error) {
 	}
 
 	return fileBytes, nil
+}
+
+func ObjectExists(s3Client *s3.Client, key string) (bool, error) {
+    // Create the HeadObjectInput
+    headObjectInput := &s3.HeadObjectInput{
+        Bucket: aws.String(bucketName),
+        Key:    aws.String(key),
+    }
+
+    // Call HeadObject to check if the object exists
+    _, err := s3Client.HeadObject(context.TODO(), headObjectInput)
+    if err != nil {
+        var apiErr smithy.APIError
+        if errors.As(err, &apiErr) && apiErr.ErrorCode() == "NotFound" {
+            return false, nil // Object does not exist
+        }
+        return false, err // Some other error occurred
+    }
+
+    return true, nil // Object exists
 }

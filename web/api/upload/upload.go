@@ -39,7 +39,19 @@ func Handler(db *sql.DB, s3Client *s3.Client) gin.HandlerFunc {
 		}
 
 		// Atomic: Put file in S3, check if already in S3, ask to overwrite, put file in db
+		// TODO use storage.ObjectExists
+		overwrite := ctx.Query("overwrite") == "true"
 		key := userId + "/" + fileHeader.Filename
+		exists, err := storage.ObjectExists(s3Client, key)
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, "Unable to check if file already exists: %s", err.Error())
+			return
+		}
+		if exists && !overwrite {
+			ctx.String(http.StatusConflict, "Asset with this name already exists")
+			return
+		}
+
 		err = storage.UploadFile(s3Client, key, fileBytes)
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, "Unable to upload file: %s", err.Error())

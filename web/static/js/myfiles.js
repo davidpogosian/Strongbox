@@ -14,6 +14,22 @@ async function handleFile(file) {
     }
 }
 
+async function overwriteFile(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload?overwrite=true", {
+        method: "POST",
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error("File overwrite failed");
+    }
+
+    return response.json();
+}
+
 async function uploadFile(file) {
     const formData = new FormData();
     formData.append("file", file);
@@ -24,6 +40,14 @@ async function uploadFile(file) {
     });
 
     if (!response.ok) {
+        if (response.status === 409) {
+            const confirmOverwrite = confirm("The file already exists. Do you want to overwrite it?");
+            if (confirmOverwrite) {
+                return await overwriteFile(file);
+            } else {
+                throw new Error("File upload canceled by user");
+            }
+        }
         throw new Error("File upload failed");
     }
 
