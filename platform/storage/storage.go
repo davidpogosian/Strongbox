@@ -1,21 +1,23 @@
 package storage
 
 import (
-	"io"
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	smithy "github.com/aws/smithy-go"
 )
 
 const (
 	bucketName = "strongbox-bucket"
-	region     = "us-east-2"
+	region     = "us-east-2" // Only used in init func?
 )
 
 // InitializeStorage loads the AWS configuration and creates an S3 client
@@ -28,6 +30,20 @@ func InitializeStorage() *s3.Client {
 
 	// Create an S3 client
 	return s3.NewFromConfig(cfg)
+}
+
+func ListObjects(s3Client *s3.Client, prefix string) ([]types.Object, error) {
+	input := &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+		Prefix: aws.String(prefix),
+	}
+
+	result, err := s3Client.ListObjectsV2(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Contents, nil
 }
 
 // UploadFile uploads a file to the S3 bucket
@@ -49,7 +65,7 @@ func UploadFile(client *s3.Client, key string, fileBytes []byte) error {
 }
 
 // DeleteFile deletes a file from the S3 bucket
-func DeleteFile(client *s3.Client, key string) error {
+func DestroyObject(client *s3.Client, key string) error {
 	// Prepare the file deletion input
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(bucketName),
@@ -63,30 +79,6 @@ func DeleteFile(client *s3.Client, key string) error {
 	}
 
 	return nil
-}
-
-// GetFile retrieves a file from the S3 bucket
-func GetFile(client *s3.Client, key string) ([]byte, error) {
-	// Prepare the file retrieval input
-	input := &s3.GetObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(key),
-	}
-
-	// Retrieve the file from S3
-	resp, err := client.GetObject(context.TODO(), input)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Read the file content into a byte slice
-	fileBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return fileBytes, nil
 }
 
 func ObjectExists(s3Client *s3.Client, key string) (bool, error) {
@@ -107,4 +99,25 @@ func ObjectExists(s3Client *s3.Client, key string) (bool, error) {
     }
 
     return true, nil // Object exists
+}
+
+func GeneratePresignedURL(s3Client *s3.Client, key string, expiration time.Duration) (string, error) {
+	// Create a presign client
+	psClient := s3.NewPresignClient(s3Client)
+
+	// Define the input parameters for the presigned URL request
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
+
+	// Generate the presigned URL
+	req, err := psClient.PresignGetObject(context.TODO(), input, func(po *s3.PresignOptions) {
+		po.Expires = expiration
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
+	}
+
+	return req.URL, nil
 }

@@ -15,11 +15,13 @@ import (
 	"strongbox/platform/authenticator"
 	"strongbox/platform/middleware"
 	"strongbox/web/api/upload"
+	"strongbox/web/api/download"
+	"strongbox/web/api/destroy"
 	"strongbox/web/app/callback"
 	"strongbox/web/app/home"
 	"strongbox/web/app/login"
 	"strongbox/web/app/logout"
-	"strongbox/web/app/myfiles"
+	"strongbox/web/app/files"
 )
 
 // New registers the routes and returns the router.
@@ -43,12 +45,14 @@ func New(db *sql.DB, auth *authenticator.Authenticator, s3Client *s3.Client) *gi
 	router.GET("/", home.Handler)
 	router.GET("/login", login.Handler(auth))
 	router.GET("/callback", callback.Handler(auth))
-	router.GET("/myfiles", middleware.IsAuthenticated, myfiles.Handler(db))
+	router.GET("/files/*path", middleware.IsAuthenticated, files.Handler(s3Client))
 	router.GET("/logout", logout.Handler)
 
 	api := router.Group("/api")
 	{
-		api.POST("/upload", middleware.MustBeAuthenticated, upload.Handler(db, s3Client))
+		api.POST("/upload", middleware.MustBeAuthenticated, upload.Handler(s3Client))
+		api.GET("/download", middleware.MustBeAuthenticated, download.Handler(s3Client))
+		api.DELETE("/destroy", middleware.MustBeAuthenticated, destroy.Handler(s3Client))
 	}
 
 	return router
