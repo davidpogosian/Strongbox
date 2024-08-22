@@ -23,6 +23,11 @@ type Folder struct {
 	S3Key string
 }
 
+type SplitPath struct {
+	Name string
+	ActualPath string
+}
+
 func Handler(s3Client *s3.Client) gin.HandlerFunc {
 	return func (ctx *gin.Context) {
 		session := sessions.Default(ctx)
@@ -30,13 +35,16 @@ func Handler(s3Client *s3.Client) gin.HandlerFunc {
 		userId := profile["sub"].(string)
 
 		// Extract folder path from URL
-        path := ctx.Param("path")
-        if path == "/" {
-        	path = ""
+        path := ctx.Param("path") // path has a prefix slash!
+        if strings.HasSuffix(path, "/") {
+        	path = strings.TrimSuffix(path, "/")
         }
 
         // List objects in S3 with the user ID as the prefix
-        trunk := userId + path + "/"
+        trunk := userId + path
+        if !strings.HasSuffix(trunk, "/") {
+        	trunk = trunk + "/"
+        }
 		objects, err := storage.ListObjects(s3Client, trunk)
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, err.Error())
@@ -65,9 +73,25 @@ func Handler(s3Client *s3.Client) gin.HandlerFunc {
             	foldersSet[folder] = true
             }
         }
-
         for folder := range foldersSet {
         	folders = append(folders, folder)
+        }
+
+        cursorPath := "/files"
+        splitPaths := []SplitPath{{Name: ".", ActualPath: cursorPath}}
+        noprefixPath := path
+        if strings.HasPrefix(path, "/") {
+        	noprefixPath = strings.TrimPrefix(noprefixPath, "/")
+        }
+        if noprefixPath != "" {
+	        parts := strings.Split(noprefixPath, "/")
+	        for _, part := range parts {
+	        	cursorPath = cursorPath + "/" + part
+	        	splitPaths = append(splitPaths, SplitPath{
+	         		Name: part,
+	           		ActualPath: cursorPath,
+	         	})
+	        }
         }
 
         data := gin.H{
@@ -75,6 +99,7 @@ func Handler(s3Client *s3.Client) gin.HandlerFunc {
             "files": 		files,
             "folders":      folders,
             "currentPath":  path,
+            "splitPaths":	splitPaths,
         }
 
         ctx.HTML(http.StatusOK, "files.html", data)

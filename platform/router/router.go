@@ -16,6 +16,7 @@ import (
 	"strongbox/platform/middleware"
 	"strongbox/web/api/upload"
 	"strongbox/web/api/download"
+	"strongbox/web/api/downloadFolder"
 	"strongbox/web/api/destroy"
 	"strongbox/web/app/callback"
 	"strongbox/web/app/home"
@@ -53,6 +54,7 @@ func New(db *sql.DB, auth *authenticator.Authenticator, s3Client *s3.Client) *gi
 		api.POST("/upload", middleware.MustBeAuthenticated, upload.Handler(s3Client))
 		api.GET("/download", middleware.MustBeAuthenticated, download.Handler(s3Client))
 		api.DELETE("/destroy", middleware.MustBeAuthenticated, destroy.Handler(s3Client))
+		api.GET("/downloadFolder", middleware.MustBeAuthenticated, downloadFolder.Handler(s3Client))
 	}
 
 	return router

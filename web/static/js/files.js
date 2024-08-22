@@ -151,6 +151,62 @@ async function destroy(s3Key) {
         console.error("Error destroying:", error);
         alert("Destroy failed.");
     }
+
+    location.reload();
+}
+
+async function downloadFolder(s3Key) {
+    try {
+        // Make a GET request to the /api/downloadFolder endpoint with the s3Key
+        const response = await fetch(`/api/downloadFolder?key=${encodeURIComponent(s3Key)}`, { method: "GET" });
+
+        if (response.ok) {
+            const data = await response.json(); // Parse JSON response
+            const downloadUrl = data.download_url;
+
+            // Create a link element and trigger the download
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = downloadUrl;
+            a.download = s3Key.split("/").pop() + ".zip"; // Set the default download file name
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => {
+                location.reload(); // Reload the page after 3 seconds (adjust as needed)
+            }, 500);
+        } else {
+            alert("Failed to get download URL");
+        }
+    } catch (error) {
+        console.error("Error downloading folder:", error);
+        alert("An error occurred while trying to download the folder.");
+    }
+}
+
+async function copyDownloadFolderUrl(s3Key) {
+    try {
+        // Fetch the download URL from the server
+        const response = await fetch(`/api/downloadFolder?key=${encodeURIComponent(s3Key)}`, { method: "GET" });
+
+        if (response.ok) {
+            const data = await response.json(); // Parse JSON response
+            const downloadUrl = data.download_url;
+
+            // Copy the download URL to the clipboard
+            await navigator.clipboard.writeText(downloadUrl);
+
+            // Optionally provide feedback to the user
+            alert("Download URL copied to clipboard!");
+        } else {
+            alert("Failed to get download URL");
+        }
+    } catch (error) {
+        console.error("Error copying download folder URL:", error);
+        alert("An error occurred while trying to copy the download folder URL.");
+    }
+
+    location.reload();
 }
 
 document.addEventListener("DOMContentLoaded", (event) => {
@@ -188,6 +244,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
         await Promise.all(promises);
 
         // Send the formData to the server
-        uploadFiles(formData);
+        await uploadFiles(formData);
+
+        location.reload();
     });
 });

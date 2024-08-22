@@ -8,12 +8,22 @@
 <body>
     <h1>My files</h1>
     <p>Hi {{ .profile.nickname }}</p>
+    <div id="location">
+        {{ if .splitPaths }}
+            {{ range .splitPaths }}
+                <a href="{{ .ActualPath }}">{{ .Name }}</a>
+                <p>/</p>
+            {{ end }}
+        {{ end }}
+    </div>
     <div id="drop_zone">Drag Files Here</div>
     <div id="file_list">
         {{ if .folders }}
             {{ range .folders }}
                 <div class="folder">
                     <h2><a href="/files{{ $.currentPath }}/{{ .Name }}">{{ .Name }}</a></h2>
+                    <button onclick="downloadFolder('{{ .S3Key }}')">Download</button>
+                    <button onclick="copyDownloadFolderUrl('{{ .S3Key }}')">Copy Download URL</button>
                     <button onclick="destroy('{{ .S3Key }}')">Destroy</button>
                 </div>
             {{ end }}

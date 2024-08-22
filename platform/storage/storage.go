@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -99,6 +100,23 @@ func ObjectExists(s3Client *s3.Client, key string) (bool, error) {
     }
 
     return true, nil // Object exists
+}
+
+func GetObject(s3Client *s3.Client, key string) (io.ReadCloser, error) {
+	// Define the GetObject input parameters
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(bucketName), // Replace with your bucket name
+		Key:    aws.String(key),
+	}
+
+	// Retrieve the object from S3
+	result, err := s3Client.GetObject(context.TODO(), input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object: %w", err)
+	}
+
+	// Return the object's body (data) and no error
+	return result.Body, nil
 }
 
 func GeneratePresignedURL(s3Client *s3.Client, key string, expiration time.Duration) (string, error) {
