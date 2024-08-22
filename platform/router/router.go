@@ -1,7 +1,6 @@
 package router
 
 import (
-	"database/sql"
 	"encoding/gob"
 	"encoding/hex"
 	"log"
@@ -26,7 +25,7 @@ import (
 )
 
 // New registers the routes and returns the router.
-func New(db *sql.DB, auth *authenticator.Authenticator, s3Client *s3.Client) *gin.Engine {
+func New(auth *authenticator.Authenticator, s3Client *s3.Client) *gin.Engine {
 	router := gin.Default()
 
 	// To store custom types in our cookies,
