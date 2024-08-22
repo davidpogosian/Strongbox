@@ -6,45 +6,68 @@
 	<title>Strongbox</title>
 </head>
 <body>
-    <h1>My files</h1>
-    <p>Hi {{ .profile.nickname }}</p>
+    <h2>{{ .profile.nickname }}'s files</h2>
+
     <div id="location">
         {{ if .splitPaths }}
             {{ range .splitPaths }}
-                <a href="{{ .ActualPath }}">{{ .Name }}</a>
-                <p>/</p>
+                <a class="location__item" href="{{ .ActualPath }}">{{ .Name }}</a>
+                <p class="location__item">/</p>
             {{ end }}
         {{ end }}
     </div>
-    <div id="drop_zone">Drag Files Here</div>
-    <div id="file_list">
-        {{ if .folders }}
-            {{ range .folders }}
-                <div class="folder">
-                    <h2><a href="/files{{ $.currentPath }}/{{ .Name }}">{{ .Name }}</a></h2>
-                    <button onclick="downloadFolder('{{ .S3Key }}')">Download</button>
-                    <button onclick="copyDownloadFolderUrl('{{ .S3Key }}')">Copy Download URL</button>
-                    <button onclick="destroy('{{ .S3Key }}')">Destroy</button>
-                </div>
-            {{ end }}
-        {{ end }}
 
-        {{ if .files }}
-            {{ range .files }}
-                <div class="file">
-                    <h2>{{ .Name }}</h2>
-                    <button onclick="downloadFile('{{ .S3Key }}')">Download</button>
-                    <button onclick="copyDownloadUrl('{{ .S3Key }}')">Copy Download URL</button>
-                    <button onclick="destroy('{{ .S3Key }}')">Destroy</button>
-                </div>
-            {{ else }}
-                <div class="file">No files found.</div>
+    <div id="drop_zone">Drag Files & Folders Here</div>
+
+    <table id="file_list">
+        <tbody>
+            {{ if .folders }}
+                {{ range .folders }}
+                    <tr>
+                        <td>
+                            <a href="/files{{ $.currentPath }}/{{ .Name }}">{{ .Name }}</a>
+                        </td>
+                        <td>
+                            <button class="btn file_list__btn" onclick="downloadFolder('{{ .S3Key }}')">Download</button>
+                        </td>
+                        <td>
+                            <button class="btn file_list__btn" onclick="copyDownloadFolderUrl('{{ .S3Key }}')">Copy Download URL</button>
+                        </td>
+                        <td>
+                            <button class="btn file_list__btn" onclick="destroy('{{ .S3Key }}')">Destroy</button>
+                        </td>
+                    </tr>
+                {{ end }}
             {{ end }}
-        {{ else }}
-            <div class="file">No files found.</div>
-        {{ end }}
-    </div>
-	<button id="logout_button" onclick="logout()">Logout</button>
+
+            {{ if .files }}
+                {{ range .files }}
+                    <tr>
+                        <div class="file">
+                            <td>
+                                {{ .Name }}
+                            </td>
+                            <td>
+                                <button class="btn file_list__btn" onclick="downloadFile('{{ .S3Key }}')">Download</button>
+                            </td>
+                            <td>
+                                <button class="btn file_list__btn" onclick="copyDownloadUrl('{{ .S3Key }}')">Copy Download URL</button>
+                            </td>
+                            <td>
+                                <button class="btn file_list__btn" onclick="destroy('{{ .S3Key }}')">Destroy</button>
+                            </td>
+                        </div>
+                    </tr>
+                {{ else }}
+                    <td class="file">No files found.</td>
+                {{ end }}
+            {{ else }}
+                <td class="file">No files found.</td>
+            {{ end }}
+        </tbody>
+    </table>
+
+	<button id="logout_button" class="btn" onclick="logout()">Logout</button>
 
 	<script src="/public/js/js.cookie.js"></script>
 	<script src="/public/js/files.js"></script>

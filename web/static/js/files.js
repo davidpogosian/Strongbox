@@ -137,6 +137,7 @@ async function destroy(s3Key) {
     const confirmDestroy = confirm(`Are you sure you want to destroy '${name}'`);
     if (!confirmDestroy) {
         console.debug("Destroy cancelled by user");
+        return;
     }
 
     try {

@@ -78,7 +78,7 @@ func Handler(s3Client *s3.Client) gin.HandlerFunc {
         }
 
         cursorPath := "/files"
-        splitPaths := []SplitPath{{Name: ".", ActualPath: cursorPath}}
+        splitPaths := []SplitPath{{Name: "root", ActualPath: cursorPath}}
         noprefixPath := path
         if strings.HasPrefix(path, "/") {
         	noprefixPath = strings.TrimPrefix(noprefixPath, "/")

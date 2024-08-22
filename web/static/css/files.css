@@ -1,16 +1,59 @@
+@font-face {
+    font-family: 'IBMPlexSans';
+    src: url('/public/fonts/IBMPlexSans-Medium.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+body {
+    font-family: IBMPlexSans;
+}
+
+h2 {
+    margin: 0px;
+    padding: 0px;
+}
+
+#location {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.location__item {
+    margin: 1px;
+}
+
 #drop_zone {
     width: 200px;
-    height: 140px;
+    height: 60px;
     border: 2px dashed #ccc;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 1.2em;
+    font-family: IBMPlexSans;
     color: #666;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 #drop_zone.dragover {
     border-color: #000;
     color: #000;
+}
+
+.btn {
+    border: none;
+    font-family: IBMPlexSans;
+    padding: 6px;
+}
+
+.file_list__btn {
+    margin: 5px;
+}
+
+#logout_button {
+    margin-top: 50px;
 }

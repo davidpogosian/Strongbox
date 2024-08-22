@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"strongbox/platform/authenticator"
+	"golang.org/x/oauth2"
 )
 
 // Handler for our login.
@@ -28,7 +29,7 @@ func Handler(auth *authenticator.Authenticator) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Redirect(http.StatusTemporaryRedirect, auth.AuthCodeURL(state))
+		ctx.Redirect(http.StatusTemporaryRedirect, auth.AuthCodeURL(state, oauth2.SetAuthURLParam("prompt", "login")))
 	}
 }
 
